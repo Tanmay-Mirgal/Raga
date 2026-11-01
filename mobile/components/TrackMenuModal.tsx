@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, Dimensions, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system/legacy';
+import { useRouter } from 'expo-router';
 import { useUser } from '@clerk/clerk-expo';
-import { getDownloads, saveDownloads } from '../utils/storage';
 import { Track, useAudio } from '../context/AudioContext';
+import { allArtistNames, pickImage } from '../services/musicApi';
+import { useOffline } from '../utils/offline';
 
 const { height, width } = Dimensions.get('window');
 
@@ -12,14 +13,16 @@ interface TrackMenuModalProps {
   visible: boolean;
   track: Track | null;
   onClose: () => void;
+  /** Called before navigating away (e.g. so the full-screen player can close itself). */
+  onNavigate?: () => void;
 }
 
-export default function TrackMenuModal({ visible, track, onClose }: TrackMenuModalProps) {
+export default function TrackMenuModal({ visible, track, onClose, onNavigate }: TrackMenuModalProps) {
   const { user } = useUser();
-  const { refreshDownloads, downloadedTracks, likedSongs, toggleLikeTrack } = useAudio();
+  const router = useRouter();
+  const { downloadTrack, removeDownload, playNext, addToQueue, startRadio, likedSongs, toggleLikeTrack } = useAudio();
+  const { downloadedIds, progress } = useOffline();
 
-  const [downloading, setDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [showPlaylistPicker, setShowPlaylistPicker] = useState(false);
 
@@ -27,15 +30,14 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
   const [isCreatePromptVisible, setIsCreatePromptVisible] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
 
-  // Check if track is already downloaded
-  const isDownloaded = track ? downloadedTracks.some((t) => t.id === track.id) : false;
+  const isDownloaded = track ? downloadedIds.has(track.id) : false;
+  const downloading = track ? progress[track.id] !== undefined : false;
+  const downloadProgress = track ? Math.round((progress[track.id] ?? 0) * 100) : 0;
   const isCurrentlyLiked = track ? likedSongs.some((t) => t.id === track.id) : false;
 
   useEffect(() => {
     if (visible) {
       loadPlaylists();
-      setDownloading(false);
-      setDownloadProgress(0);
       setShowPlaylistPicker(false);
       setIsCreatePromptVisible(false);
       setNewPlaylistName('');
@@ -55,82 +57,30 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
     }
   };
 
-  // 1. Download Track
+  // 1. Download Track (saved to device; works offline)
   const handleDownload = async () => {
     if (!track) return;
+    onClose();
     try {
-      setDownloading(true);
-      setDownloadProgress(0);
-
-      const downloadUrl = track.downloadUrl[track.downloadUrl.length - 1].url;
-      const fileExtension = '.mp3';
-      const dir = FileSystem.documentDirectory;
-      if (!dir) {
-        Alert.alert('Not Supported', 'Offline downloads are not supported on this platform.');
-        return;
-      }
-      const fileUri = `${dir}${track.id}${fileExtension}`;
-
-      const downloadResumable = FileSystem.createDownloadResumable(
-        downloadUrl,
-        fileUri,
-        {},
-        (downloadProgressData) => {
-          const progress = downloadProgressData.totalBytesWritten / downloadProgressData.totalBytesExpectedToWrite;
-          setDownloadProgress(Math.round(progress * 100));
-        }
-      );
-
-      const result = await downloadResumable.downloadAsync();
-      
-      if (result && result.uri) {
-        const savedDownloads = await getDownloads();
-        let downloadsList: Track[] = savedDownloads || [];
-
-        if (!downloadsList.some((t) => t.id === track.id)) {
-          const offlineTrack: Track = {
-            ...track,
-            localUri: result.uri,
-          };
-          downloadsList.push(offlineTrack);
-          await saveDownloads(downloadsList);
-        }
-
-        await refreshDownloads();
-        Alert.alert('Download Complete', `"${track.name}" is now available offline! 📦`);
-      }
+      const ok = await downloadTrack(track);
+      if (ok) Alert.alert('Downloaded', `"${track.name}" is now available offline.`);
     } catch (error) {
       console.error('Download error:', error);
-      Alert.alert('Download Error', 'Could not download track. Try again.');
-    } finally {
-      setDownloading(false);
-      onClose();
+      Alert.alert('Download failed', 'Could not download this song. Check your connection and try again.');
     }
   };
 
   // 2. Remove Download
   const handleRemoveDownload = async () => {
     if (!track) return;
-    try {
-      const savedDownloads = await getDownloads();
-      if (savedDownloads && savedDownloads.length > 0) {
-        let downloadsList: Track[] = savedDownloads;
-        const match = downloadsList.find((t) => t.id === track.id);
-        
-        if (match && match.localUri) {
-          await FileSystem.deleteAsync(match.localUri, { idempotent: true });
-        }
+    await removeDownload(track.id);
+    onClose();
+  };
 
-        downloadsList = downloadsList.filter((t) => t.id !== track.id);
-        await saveDownloads(downloadsList);
-        await refreshDownloads();
-        Alert.alert('Deleted', 'Song deleted from offline storage.');
-      }
-    } catch (e) {
-      console.error('Error removing download:', e);
-    } finally {
-      onClose();
-    }
+  const go = (path: string) => {
+    onNavigate?.();
+    onClose();
+    router.push(path as any);
   };
 
   // 3. Trigger Create Playlist overlay
@@ -199,7 +149,8 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
 
   if (!track) return null;
 
-  const songImg = track.image?.[1]?.url || track.image?.[0]?.url;
+  const songImg = pickImage(track.image, 'md');
+  const artistRef = track.artists?.primary?.[0];
 
   return (
     <Modal
@@ -252,7 +203,7 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
                     {track.name}
                   </Text>
                   <Text style={styles.artistName} numberOfLines={1}>
-                    {track.artists?.primary?.[0]?.name || 'Unknown Artist'}
+                    {allArtistNames(track)}
                   </Text>
                 </View>
               </View>
@@ -269,6 +220,20 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
               {!showPlaylistPicker ? (
                 <ScrollView contentContainerStyle={styles.actionsList}>
                   
+                  {/* Queue + radio */}
+                  <TouchableOpacity style={styles.actionRow} onPress={() => { playNext(track); onClose(); }}>
+                    <Ionicons name="play-forward-outline" size={22} color="#FFFFFF" />
+                    <Text style={styles.actionText}>Play next</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionRow} onPress={() => { addToQueue(track); onClose(); }}>
+                    <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
+                    <Text style={styles.actionText}>Add to queue</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionRow} onPress={() => { onNavigate?.(); onClose(); startRadio(track); }}>
+                    <Ionicons name="radio-outline" size={22} color="#FFFFFF" />
+                    <Text style={styles.actionText}>Start song radio</Text>
+                  </TouchableOpacity>
+
                   {/* Playlist Action */}
                   <TouchableOpacity style={styles.actionRow} onPress={() => setShowPlaylistPicker(true)}>
                     <Ionicons name="musical-notes-outline" size={22} color="#FFFFFF" />
@@ -296,7 +261,20 @@ export default function TrackMenuModal({ visible, track, onClose }: TrackMenuMod
                   ) : (
                     <TouchableOpacity style={styles.actionRow} onPress={handleRemoveDownload}>
                       <Ionicons name="checkmark-circle" size={22} color="#1DB954" />
-                      <Text style={styles.actionText}>Downloaded (Remove offline file)</Text>
+                      <Text style={styles.actionText}>Downloaded · tap to remove</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {track.album?.id && (
+                    <TouchableOpacity style={styles.actionRow} onPress={() => go(`/album/${track.album!.id}`)}>
+                      <Ionicons name="disc-outline" size={22} color="#FFFFFF" />
+                      <Text style={styles.actionText}>Go to album</Text>
+                    </TouchableOpacity>
+                  )}
+                  {artistRef?.id && (
+                    <TouchableOpacity style={styles.actionRow} onPress={() => go(`/artist/${artistRef.id}?name=${encodeURIComponent(artistRef.name)}`)}>
+                      <Ionicons name="person-outline" size={22} color="#FFFFFF" />
+                      <Text style={styles.actionText}>Go to artist</Text>
                     </TouchableOpacity>
                   )}
 

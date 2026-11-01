@@ -7,6 +7,7 @@ import { useUser } from '@clerk/clerk-expo';
 import { useAudio, Track } from '../../../context/AudioContext';
 import TrackMenuModal from '../../../components/TrackMenuModal';
 import { MemoizedTrackRow } from '../../../components/MemoizedTrackRow';
+import { searchSongs } from '../../../services/musicApi';
 
 const { width, height } = Dimensions.get('window');
 
@@ -69,13 +70,9 @@ export default function PlaylistsScreen() {
   const performPlaylistSearch = async (query: string) => {
     try {
       setSearching(true);
-      const response = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=10`);
-      const resData = await response.json();
-      if (resData.success && resData.data?.results) {
-        setSearchResults(resData.data.results);
-      }
+      setSearchResults(await searchSongs(query, 0, 10));
     } catch (e) {
-      console.error('Error searching songs for playlist:', e);
+      console.log('Could not search songs for playlist:', (e as Error)?.message);
     } finally {
       setSearching(false);
     }

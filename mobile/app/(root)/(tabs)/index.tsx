@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Dimensions, Modal, SafeAreaView, FlatList, Alert } from 'react-native';
 import { useUser } from '@clerk/clerk-expo';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
-import * as FileSystem from 'expo-file-system/legacy';
-import { getDownloads, saveDownloads } from '../../../utils/storage';
+import { fetchWithTimeout } from '../../../services/musicApi/http';
+import { getHomeSections, peekHomeSections, type HomeSection } from '../../../services/musicApi';
+import HomeSections from '../../../components/HomeSections';
 import { useAudio } from '../../../context/AudioContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import TrackMenuModal from '../../../components/TrackMenuModal';
@@ -53,19 +55,17 @@ interface ShelfData {
 }
 
 // Global session cache for personalized feed
-let cachedGridSongs: any[] = [];
-let cachedShelves: ShelfData[] = [];
+let cachedSections: HomeSection[] = [];
 let cachedPlaylists: any[] = [];
 
 export function clearHomeCache() {
-  cachedGridSongs = [];
-  cachedShelves = [];
+  cachedSections = [];
   cachedPlaylists = [];
 }
 
 export default function HomeScreen() {
   const { user } = useUser();
-  const { playTrack, currentTrack, isPlaying, likedSongs, toggleLikeTrack, downloadedTracks, refreshDownloads } = useAudio();
+  const { playTrack, currentTrack, isPlaying, likedSongs, toggleLikeTrack, downloadedTracks, removeDownload, recentlyPlayed } = useAudio();
 
   const [loading, setLoading] = useState(true);
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
@@ -76,8 +76,18 @@ export default function HomeScreen() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   // Feed states
-  const [gridSongs, setGridSongs] = useState<any[]>(cachedGridSongs);
-  const [shelves, setShelves] = useState<ShelfData[]>(cachedShelves);
+  const [sections, setSections] = useState<HomeSection[]>(cachedSections);
+  const gridSongs = useMemo(() => {
+    const first = sections.find((x) => x.type === 'songs');
+    return first && first.type === 'songs' ? first.items.slice(0, 6) : [];
+  }, [sections]);
+  const allSections = useMemo<HomeSection[]>(
+    () =>
+      recentlyPlayed.length > 0
+        ? [{ id: 'recent', title: 'Recently played', type: 'songs', items: recentlyPlayed.slice(0, 15) }, ...sections]
+        : sections,
+    [sections, recentlyPlayed]
+  );
   const [playlists, setPlaylists] = useState<any[]>(cachedPlaylists);
 
   // States for options modal sheet
@@ -173,7 +183,7 @@ export default function HomeScreen() {
     if (!user) return;
 
     // Check if cache is already loaded to bypass loading screen
-    if (cachedGridSongs.length > 0 && cachedShelves.length > 0) {
+    if (cachedSections.length > 0) {
       setLoading(false);
       fetchPlaylists();
       return;
@@ -181,13 +191,14 @@ export default function HomeScreen() {
 
     try {
       setLoading(true);
-      await syncUserToDatabase();
-      await fetchPlaylists();
+      // Do not hold the home screen hostage to a sleeping free-tier server.
+      void syncUserToDatabase();
+      void fetchPlaylists();
 
       // Check local storage flag
       const localFlag = await SecureStore.getItemAsync('has_set_preferences');
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/users/preferences?userId=${user.id}`);
+      const res = await fetchWithTimeout(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/users/preferences?userId=${user.id}`, 8000);
       
       let languages = ['hindi'];
       let genres = ['lofi', 'romantic'];
@@ -204,6 +215,8 @@ export default function HomeScreen() {
         }
       }
 
+      if (hasPrefs) AsyncStorage.setItem('raga:prefs', JSON.stringify({ languages, genres })).catch(() => {});
+
       if (hasPrefs || localFlag === 'true') {
         setShowPreferenceModal(false);
         await loadPersonalizedFeed(languages, genres);
@@ -213,8 +226,16 @@ export default function HomeScreen() {
       setShowPreferenceModal(true);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading preferences:', error);
-      await loadPersonalizedFeed(['hindi'], ['lofi', 'romantic']);
+      // Offline or server asleep: fall back to the last saved taste profile.
+      console.log('Preferences unavailable, using saved ones:', (error as Error)?.message);
+      let saved = { languages: ['hindi'], genres: ['lofi', 'romantic'] };
+      try {
+        const raw = await AsyncStorage.getItem('raga:prefs');
+        if (raw) saved = JSON.parse(raw);
+      } catch {
+        // keep defaults
+      }
+      await loadPersonalizedFeed(saved.languages, saved.genres);
     }
   };
 
@@ -227,56 +248,19 @@ export default function HomeScreen() {
   const loadPersonalizedFeed = async (languages: string[], genres: string[]) => {
     try {
       setLoading(true);
-
-      const primaryLanguage = languages[0] || 'hindi';
-      const secondaryLanguage = languages[1] || primaryLanguage;
-      const primaryGenre = genres[0] || 'lofi';
-      const secondaryGenre = genres[1] || 'romantic';
-
-      const gridRes = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(primaryLanguage + ' hits')}&limit=6`);
-      const gridData = await gridRes.json();
-      let gridDataResults = [];
-      if (gridData.success && gridData.data?.results) {
-        gridDataResults = gridData.data.results.slice(0, 6);
-        setGridSongs(gridDataResults);
-        cachedGridSongs = gridDataResults;
+      // Show the last feed we loaded straight away (works offline), then refresh it.
+      const stored = await peekHomeSections(languages, genres);
+      if (stored && stored.length > 0) {
+        setSections(stored);
+        cachedSections = stored;
+        setLoading(false);
       }
-
-      const shelfQueries = [
-        {
-          label: `${capitalize(primaryLanguage)} ${capitalize(primaryGenre)}`,
-          query: `${primaryLanguage} ${primaryGenre}`,
-        },
-        {
-          label: `${capitalize(primaryLanguage)} ${capitalize(secondaryGenre)}`,
-          query: `${primaryLanguage} ${secondaryGenre}`,
-        },
-        {
-          label: `${capitalize(secondaryLanguage)} ${capitalize(primaryGenre)}`,
-          query: `${secondaryLanguage} ${primaryGenre}`,
-        },
-      ];
-
-      const shelfPromises = shelfQueries.map(async (item) => {
-        try {
-          const res = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(item.query)}&limit=6`);
-          const resData = await res.json();
-          return {
-            title: item.label,
-            songs: resData.success && resData.data?.results ? resData.data.results : [],
-          };
-        } catch (e) {
-          return { title: item.label, songs: [] };
-        }
-      });
-
-      const fetchedShelves = await Promise.all(shelfPromises);
-      const finalShelves = fetchedShelves.filter(s => s.songs.length > 0);
-      setShelves(finalShelves);
-      cachedShelves = finalShelves;
+      const fresh = await getHomeSections(languages, genres);
+      setSections(fresh);
+      cachedSections = fresh;
       setShowPreferenceModal(false);
     } catch (e) {
-      console.error(e);
+      console.log('Home feed unavailable:', (e as Error)?.message);
     } finally {
       setLoading(false);
     }
@@ -312,6 +296,7 @@ export default function HomeScreen() {
       
       // Save local storage flag
       await SecureStore.setItemAsync('has_set_preferences', 'true');
+      AsyncStorage.setItem('raga:prefs', JSON.stringify({ languages: selectedLanguages, genres: selectedGenres })).catch(() => {});
 
       await fetch(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/users/preferences`, {
         method: 'POST',
@@ -326,65 +311,15 @@ export default function HomeScreen() {
   };
 
   const handlePlaySong = (song: any, sectionList: any[]) => {
-    const track = {
-      id: song.id,
-      name: song.name,
-      artists: {
-        primary: song.artists?.primary || [{ name: 'Unknown Artist' }]
-      },
-      image: song.image || [],
-      downloadUrl: song.downloadUrl || []
-    };
-
-    const queue = sectionList.map((s) => ({
-      id: s.id,
-      name: s.name,
-      artists: {
-        primary: s.artists?.primary || [{ name: 'Unknown Artist' }]
-      },
-      image: s.image || [],
-      downloadUrl: s.downloadUrl || []
-    }));
-
-    playTrack(track, queue);
+    playTrack(song, sectionList);
   };
 
   const handleRemoveDownload = async (trackId: string) => {
-    try {
-      const savedDownloads = await getDownloads();
-      if (savedDownloads && savedDownloads.length > 0) {
-        let downloadsList = savedDownloads;
-        const match = downloadsList.find((t: any) => t.id === trackId);
-        
-        if (match && match.localUri) {
-          try {
-            await FileSystem.deleteAsync(match.localUri, { idempotent: true });
-          } catch (err) {
-            console.log('Error deleting physical file:', err);
-          }
-        }
-
-        downloadsList = downloadsList.filter((t: any) => t.id !== trackId);
-        await saveDownloads(downloadsList);
-        await refreshDownloads();
-        Alert.alert('Deleted', 'Song deleted from offline storage.');
-      }
-    } catch (e) {
-      console.error('Error removing download:', e);
-    }
+    await removeDownload(trackId);
   };
 
   const handleOpenMenu = (song: any) => {
-    const track = {
-      id: song.id,
-      name: song.name,
-      artists: {
-        primary: song.artists?.primary || [{ name: 'Unknown Artist' }]
-      },
-      image: song.image || [],
-      downloadUrl: song.downloadUrl || []
-    };
-    setMenuTrack(track);
+    setMenuTrack(song);
     setIsTrackMenuVisible(true);
   };
 
@@ -521,28 +456,23 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Personalized Shelves */}
-        {shelves.map((shelf, sIndex) => (
-          <View key={sIndex} style={styles.section}>
-            <Text style={styles.sectionHeader}>{shelf.title}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
-              {shelf.songs.map((song) => {
-                const songImg = song.image?.[2]?.url || song.image?.[1]?.url || song.image?.[0]?.url;
-                return (
-                  <MemoizedAlbumCard
-                    key={song.id}
-                    id={song.id}
-                    name={song.name}
-                    artist={song.artists?.primary?.[0]?.name || 'Artist'}
-                    imageUrl={songImg}
-                    onPress={() => handlePlaySong(song, shelf.songs)}
-                    onMenuPress={() => handleOpenMenu(song)}
-                  />
-                );
-              })}
-            </ScrollView>
+        {/* Personalized shelves: songs, albums, artists, playlists */}
+        <HomeSections sections={allSections} onPlaySong={handlePlaySong} onSongMenu={handleOpenMenu} />
+
+        {allSections.length === 0 && (
+          <View style={{ padding: 32, alignItems: 'center' }}>
+            <Ionicons name="cloud-offline-outline" size={40} color="#535353" />
+            <Text style={{ color: '#B3B3B3', marginTop: 12, textAlign: 'center' }}>
+              Could not load music right now. Your downloads and recently played songs still work.
+            </Text>
+            <TouchableOpacity
+              onPress={checkPreferencesAndLoad}
+              style={{ marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20, backgroundColor: '#1DB954' }}
+            >
+              <Text style={{ color: '#000', fontWeight: 'bold' }}>Retry</Text>
+            </TouchableOpacity>
           </View>
-        ))}
+        )}
       </ScrollView>
 
       {/* 2-Step Preference Modal */}

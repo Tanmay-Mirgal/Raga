@@ -16,7 +16,7 @@ export default function ProfileScreen() {
   const { user } = useUser();
   const router = useRouter();
   
-  const { playTrack, downloadedTracks, refreshDownloads, isPlaying, currentTrack } = useAudio();
+  const { playTrack, downloadedTracks, refreshDownloads, isPlaying, currentTrack, likedSongs } = useAudio();
 
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
@@ -195,8 +195,8 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>182</Text>
-            <Text style={styles.statLabel}>Hours Listened</Text>
+            <Text style={styles.statValue}>{likedSongs.length}</Text>
+            <Text style={styles.statLabel}>Liked Songs</Text>
           </View>
         </View>
 
@@ -274,6 +274,14 @@ export default function ProfileScreen() {
         {/* Settings Options */}
         <View style={styles.settingsSection}>
           <Text style={styles.settingsHeader}>Settings</Text>
+
+          <TouchableOpacity style={styles.settingsRow} onPress={() => router.push('/settings' as any)}>
+            <View style={styles.rowLeft}>
+              <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.rowText}>Playback, offline & storage</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#B3B3B3" />
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.settingsRow} onPress={handleResetPreferences}>
             <View style={styles.rowLeft}>

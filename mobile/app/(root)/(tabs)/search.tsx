@@ -16,6 +16,20 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useAudio } from '../../../context/AudioContext';
 import TrackMenuModal from '../../../components/TrackMenuModal';
 import { MemoizedTrackRow } from '../../../components/MemoizedTrackRow';
+import { CoverCard } from '../../../components/CoverCard';
+import { useRouter } from 'expo-router';
+import {
+  searchAll,
+  pickImage,
+  allArtistNames,
+  type AlbumSummary,
+  type ArtistSummary,
+  type PlaylistSummary,
+  type Track,
+} from '../../../services/musicApi';
+import { getPlayableOfflineTracks } from '../../../utils/offline';
+import { getNetState } from '../../../utils/network';
+import { getSettings } from '../../../utils/settings';
 
 const { width } = Dimensions.get('window');
 
@@ -103,7 +117,13 @@ export default function SearchScreen() {
 
   const [searchQuery, setSearchQuery]   = useState('');
   const [loading, setLoading]           = useState(false);
+  const router = useRouter();
   const [results, setResults]           = useState<any[]>([]);
+  const [albums, setAlbums]             = useState<AlbumSummary[]>([]);
+  const [artists, setArtists]           = useState<ArtistSummary[]>([]);
+  const [playlistResults, setPlaylistResults] = useState<PlaylistSummary[]>([]);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const [localOnly, setLocalOnly]       = useState(false);
   const [recentSearches, setRecentSearches] = useState<any[]>([]);
   const [isFocused, setIsFocused]       = useState(false);
 
@@ -120,19 +140,49 @@ export default function SearchScreen() {
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setResults([]);
+      setAlbums([]);
+      setArtists([]);
+      setPlaylistResults([]);
+      setSearchFailed(false);
+      setLocalOnly(false);
       return;
     }
+
+    // Songs saved on this device are always searchable, even with no internet.
+    const needle = query.trim().toLowerCase();
+    const searchSaved = (): Track[] =>
+      getPlayableOfflineTracks().filter(
+        (t) => t.name.toLowerCase().includes(needle) || allArtistNames(t).toLowerCase().includes(needle)
+      );
+
+    if (!getNetState().online || getSettings().offlineMode) {
+      setResults(searchSaved());
+      setAlbums([]);
+      setArtists([]);
+      setPlaylistResults([]);
+      setLocalOnly(true);
+      setSearchFailed(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const res = await fetch(
-        `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(query)}&limit=15`
-      );
-      const resData = await res.json();
-      if (resData.success && resData.data?.results) {
-        setResults(resData.data.results);
-      }
+      setLocalOnly(false);
+      setSearchFailed(false);
+      const found = await searchAll(query);
+      setResults(found.songs);
+      setAlbums(found.albums);
+      setArtists(found.artists);
+      setPlaylistResults(found.playlists);
     } catch (e) {
-      console.error('Search error:', e);
+      console.log('Search unavailable:', (e as Error)?.message);
+      const saved = searchSaved();
+      setResults(saved);
+      setAlbums([]);
+      setArtists([]);
+      setPlaylistResults([]);
+      setLocalOnly(saved.length > 0);
+      setSearchFailed(saved.length === 0);
     } finally {
       setLoading(false);
     }
@@ -168,30 +218,14 @@ export default function SearchScreen() {
 
   // ── Play a song from results ───────────────────────────────────────────────
   const handlePlaySong = async (song: any) => {
-    const toTrack = (r: any) => ({
-      id: r.id,
-      name: r.name,
-      artists: { primary: r.artists?.primary || [{ name: 'Unknown Artist' }] },
-      image: r.image || [],
-      downloadUrl: r.downloadUrl || [],
-    });
-
-    const track = toTrack(song);
-    const updated = await addRecentTrack(track);
+    const updated = await addRecentTrack(song);
     setRecentSearches(updated);
-
-    playTrack(track, results.map(toTrack));
+    playTrack(song, results);
   };
 
   // ── Open 3-dot menu ───────────────────────────────────────────────────────
   const handleOpenMenu = (song: any) => {
-    setMenuTrack({
-      id: song.id,
-      name: song.name,
-      artists: { primary: song.artists?.primary || [{ name: 'Unknown Artist' }] },
-      image: song.image || [],
-      downloadUrl: song.downloadUrl || [],
-    });
+    setMenuTrack(song);
     setIsTrackMenuVisible(true);
   };
 
@@ -236,6 +270,47 @@ export default function SearchScreen() {
         <FlatList
           data={results}
           keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={
+            <View>
+              {localOnly && (
+                <Text style={{ color: '#B3B3B3', fontSize: 12, marginBottom: 12 }}>
+                  Offline · showing songs saved on your device
+                </Text>
+              )}
+              {artists.length > 0 && (
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.sectionHeader}>Artists</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {artists.map((a) => (
+                      <CoverCard key={a.id} round size={110} title={a.name} subtitle="Artist" imageUrl={pickImage(a.image, 'md')} onPress={() => router.push(`/artist/${a.id}?name=${encodeURIComponent(a.name)}` as any)} />
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+              {albums.length > 0 && (
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.sectionHeader}>Albums</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {albums.map((a) => (
+                      <CoverCard key={a.id} size={120} title={a.name} subtitle={a.year} imageUrl={pickImage(a.image, 'lg')} onPress={() => router.push(`/album/${a.id}` as any)} />
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+              {playlistResults.length > 0 && (
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.sectionHeader}>Playlists</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {playlistResults.map((p) => (
+                      <CoverCard key={p.id} size={120} title={p.name} subtitle={p.songCount ? `${p.songCount} songs` : 'Playlist'} imageUrl={pickImage(p.image, 'lg')} onPress={() => router.push(`/playlist/${p.id}` as any)} />
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+              {results.length > 0 && <Text style={styles.sectionHeader}>Songs</Text>}
+            </View>
+          }
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 130 }}
           // ── Chunking / performance props ──────────────────────────────────
           initialNumToRender={8}        // first visible chunk
@@ -260,7 +335,9 @@ export default function SearchScreen() {
           }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No results for "{searchQuery}"</Text>
+              <Text style={styles.emptyText}>
+                {searchFailed ? "Can't search right now. Check your connection." : `No results for "${searchQuery}"`}
+              </Text>
             </View>
           }
         />
