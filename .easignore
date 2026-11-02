@@ -1,0 +1,15 @@
+# Used instead of .gitignore for EAS Build uploads (repo root = monorepo root).
+node_modules
+.env
+.env.example
+
+# Only the mobile app is built here
+/web
+/server
+
+# Stale / generated native projects: let EAS regenerate them from app.json
+/mobile/android
+/mobile/ios
+/mobile/.expo
+/mobile/dist
+/mobile/web-build

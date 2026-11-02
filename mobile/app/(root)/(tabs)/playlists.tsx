@@ -314,7 +314,7 @@ export default function PlaylistsScreen() {
               ListHeaderComponent={
                 <View style={styles.playlistHeroContainer}>
                   <LinearGradient
-                    colors={['#2D46B9', '#121212']}
+                    colors={['#2D46B9', '#0A0A0F']}
                     style={styles.playlistHeroGradient}
                   >
                     {/* Back button and title */}
@@ -547,7 +547,7 @@ export default function PlaylistsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
     paddingTop: 54,
   },
   header: {
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   // Playlist detail overlay modal
   playlistDetailContainer: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   playlistDetailHeader: {
     flexDirection: 'row',

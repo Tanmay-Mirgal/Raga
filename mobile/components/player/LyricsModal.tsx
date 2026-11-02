@@ -135,7 +135,7 @@ export default function LyricsModal({ visible, onClose }: { visible: boolean; on
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, height: 56 },
   headerBtn: { padding: 6 },
   headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },

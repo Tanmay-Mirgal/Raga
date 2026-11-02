@@ -86,7 +86,7 @@ export default function QueueModal({ visible, onClose }: { visible: boolean; onC
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, height: 56 },
   headerBtn: { padding: 6 },
   headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },

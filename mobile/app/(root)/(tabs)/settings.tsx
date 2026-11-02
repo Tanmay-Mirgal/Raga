@@ -52,7 +52,7 @@ export default function SettingsScreen() {
     ]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ padding: 6 }}>
           <Ionicons name="chevron-back" size={28} color="#FFFFFF" />

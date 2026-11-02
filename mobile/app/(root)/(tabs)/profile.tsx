@@ -167,7 +167,7 @@ export default function ProfileScreen() {
   const initialLetter = displayName.charAt(0).toUpperCase();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
         {/* Header Profile Info */}
         <View style={styles.profileHeader}>
@@ -389,7 +389,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   profileHeader: {
     alignItems: 'center',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   // Playlist details submodal
   playlistDetailContainer: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   playlistDetailHeader: {
     flexDirection: 'row',

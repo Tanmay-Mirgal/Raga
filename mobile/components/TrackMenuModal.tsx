@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 4,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   trackMeta: {
     flex: 1,

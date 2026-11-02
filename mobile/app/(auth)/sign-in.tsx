@@ -1,4 +1,6 @@
 import { useClerk, useOAuth } from '@clerk/clerk-expo';
+import { LinearGradient } from 'expo-linear-gradient';
+import { authStyles } from '../../theme/authStyles';
 import { Link, useRouter } from 'expo-router';
 import { Text, TextInput, TouchableOpacity, View, StyleSheet, Alert, Image, ActivityIndicator, StatusBar } from 'react-native';
 import React, { useState, useEffect } from 'react';
@@ -32,7 +34,8 @@ export default function SignInScreen() {
   const onGoogleSignInPress = React.useCallback(async () => {
     try {
       setGoogleLoading(true);
-      const redirectUrl = Linking.createURL('/', { scheme: 'mobile' });
+      // Uses the scheme from app.json ("raga"); a hard-coded "mobile" scheme no longer matches the app.
+      const redirectUrl = Linking.createURL('/');
       const { createdSessionId, setActive: setOAuthActive } = await startOAuthFlow({
         redirectUrl,
       });
@@ -76,6 +79,7 @@ export default function SignInScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      <LinearGradient colors={['rgba(29,185,84,0.22)', 'rgba(10,10,15,0)']} style={styles.glow} pointerEvents="none" />
       
       <View style={styles.headerContainer}>
         <View style={styles.logoWrapper}>
@@ -95,7 +99,7 @@ export default function SignInScreen() {
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Enter your email..."
-          placeholderTextColor="#7A7A7A"
+          placeholderTextColor="#6B6B78"
           onChangeText={(val) => setEmailAddress(val)}
           onFocus={() => setEmailFocused(true)}
           onBlur={() => setEmailFocused(false)}
@@ -106,7 +110,7 @@ export default function SignInScreen() {
         <TextInput
           value={password}
           placeholder="Enter your password..."
-          placeholderTextColor="#7A7A7A"
+          placeholderTextColor="#6B6B78"
           secureTextEntry={true}
           onChangeText={(val) => setPassword(val)}
           onFocus={() => setPasswordFocused(true)}
@@ -162,128 +166,4 @@ export default function SignInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: 'center',
-    backgroundColor: '#121212', // Solid Spotify dark theme
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 42,
-  },
-  logoWrapper: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logo: {
-    width: 64,
-    height: 64,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#B3B3B3',
-    marginTop: 4,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputLabel: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginLeft: 2,
-  },
-  input: {
-    backgroundColor: '#282828',
-    color: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 4,
-    marginBottom: 20,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  inputFocused: {
-    borderColor: '#1DB954', // Spotify green border on focus
-  },
-  signInButton: {
-    backgroundColor: '#1DB954', // Spotify Green
-    borderRadius: 24,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  signInButtonText: {
-    color: '#000000',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#282828',
-  },
-  dividerText: {
-    color: '#B3B3B3',
-    paddingHorizontal: 12,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  googleButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#7A7A7A',
-    borderRadius: 24,
-    paddingVertical: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  googleIcon: {
-    marginRight: 10,
-  },
-  googleButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-    gap: 6,
-  },
-  footerText: {
-    color: '#B3B3B3',
-    fontSize: 13,
-  },
-  link: {
-    color: '#1DB954', // Spotify Green
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-});
+const styles = authStyles;

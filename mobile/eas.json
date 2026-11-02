@@ -14,6 +14,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_c2FjcmVkLWNyYWItNTcuY2xlcmsuYWNjb3VudHMuZGV2JA",
         "EXPO_PUBLIC_API_BASE_URL": "https://raga-music-player-node.onrender.com"

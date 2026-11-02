@@ -60,7 +60,7 @@ export default function CollectionView({ title, subtitle, description, imageUrl,
 
   const header = (
     <View>
-      <LinearGradient colors={[tint, '#121212']} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={[tint, '#0A0A0F']} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.back} hitSlop={8}>
           <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
         </TouchableOpacity>
@@ -114,7 +114,7 @@ export default function CollectionView({ title, subtitle, description, imageUrl,
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
       <FlatList
         data={tracks}
         keyExtractor={(item, i) => `${item.id}-${i}`}

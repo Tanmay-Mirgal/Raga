@@ -239,7 +239,7 @@ export default function SearchScreen() {
 
       {/* Search bar */}
       <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={20} color="#000000" style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color="#A7A7B3" style={styles.searchIcon} />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -253,7 +253,7 @@ export default function SearchScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-            <Ionicons name="close" size={20} color="#000000" />
+            <Ionicons name="close-circle" size={20} color="#A7A7B3" />
           </TouchableOpacity>
         )}
       </View>
@@ -413,13 +413,14 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
     paddingTop: 54,
   },
   screenHeader: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: -0.5,
     paddingHorizontal: 16,
     marginBottom: 16,
   },
@@ -428,9 +429,11 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    height: 48,
+    backgroundColor: '#1C1C26',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    height: 50,
     marginHorizontal: 16,
     marginBottom: 20,
     paddingHorizontal: 12,
@@ -438,8 +441,8 @@ const styles = StyleSheet.create({
   searchIcon:  { marginRight: 10 },
   searchInput: {
     flex: 1,
-    color: '#000000',
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '600',
     paddingVertical: 8,
   },

@@ -7,6 +7,8 @@ import * as SecureStore from 'expo-secure-store';
 import { fetchWithTimeout } from '../../../services/musicApi/http';
 import { getHomeSections, peekHomeSections, type HomeSection } from '../../../services/musicApi';
 import HomeSections from '../../../components/HomeSections';
+import HomeHeader from '../../../components/HomeHeader';
+import { HomeSkeleton } from '../../../components/Skeleton';
 import { useAudio } from '../../../context/AudioContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import TrackMenuModal from '../../../components/TrackMenuModal';
@@ -381,33 +383,15 @@ export default function HomeScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>Loading your custom soundscape...</Text>
-      </View>
-    );
+    return <HomeSkeleton />;
   }
 
   const gridItems = getGridItems();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Header Row */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Image source={require('../../../assets/images/riffy_logo.png')} style={styles.logoImage} />
-            <Text style={styles.greetingText}>{getGreeting()}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} style={styles.profileHeaderImage} />
-            ) : (
-              <Ionicons name="person-circle-outline" size={32} color="#FFFFFF" />
-            )}
-          </View>
-        </View>
+        <HomeHeader name={displayName} imageUrl={user?.imageUrl} />
 
         {/* AI Smart Mix Banner */}
         <TouchableOpacity
@@ -741,11 +725,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -813,7 +797,7 @@ const styles = StyleSheet.create({
   gridImage: {
     width: 56,
     height: 56,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   gridTitleWrapper: {
     flex: 1,
@@ -978,7 +962,7 @@ const styles = StyleSheet.create({
   },
   likedSongsContainer: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0A0F',
   },
   likedSongsHeader: {
     flexDirection: 'row',

@@ -1,4 +1,6 @@
 import { useClerk } from '@clerk/clerk-expo';
+import { LinearGradient } from 'expo-linear-gradient';
+import { authStyles } from '../../theme/authStyles';
 import { Link, useRouter } from 'expo-router';
 import { Text, TextInput, TouchableOpacity, View, StyleSheet, Alert, Image, ActivityIndicator, StatusBar } from 'react-native';
 import React, { useState } from 'react';
@@ -67,6 +69,7 @@ export default function SignUpScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      <LinearGradient colors={['rgba(29,185,84,0.22)', 'rgba(10,10,15,0)']} style={styles.glow} pointerEvents="none" />
       
       <View style={styles.headerContainer}>
         <View style={styles.logoWrapper}>
@@ -87,7 +90,7 @@ export default function SignUpScreen() {
             autoCapitalize="none"
             value={emailAddress}
             placeholder="Enter your email..."
-            placeholderTextColor="#7A7A7A"
+            placeholderTextColor="#6B6B78"
             onChangeText={(val) => setEmailAddress(val)}
             onFocus={() => setEmailFocused(true)}
             onBlur={() => setEmailFocused(false)}
@@ -98,7 +101,7 @@ export default function SignUpScreen() {
           <TextInput
             value={password}
             placeholder="Create a password..."
-            placeholderTextColor="#7A7A7A"
+            placeholderTextColor="#6B6B78"
             secureTextEntry={true}
             onChangeText={(val) => setPassword(val)}
             onFocus={() => setPasswordFocused(true)}
@@ -126,7 +129,7 @@ export default function SignUpScreen() {
           <TextInput
             value={code}
             placeholder="Enter verification code..."
-            placeholderTextColor="#7A7A7A"
+            placeholderTextColor="#6B6B78"
             onChangeText={(val) => setCode(val)}
             onFocus={() => setCodeFocused(true)}
             onBlur={() => setCodeFocused(false)}
@@ -161,96 +164,4 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: 'center',
-    backgroundColor: '#121212',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 42,
-  },
-  logoWrapper: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logo: {
-    width: 64,
-    height: 64,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#B3B3B3',
-    marginTop: 4,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputLabel: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginLeft: 2,
-  },
-  helperText: {
-    color: '#B3B3B3',
-    fontSize: 12,
-    marginBottom: 12,
-    marginLeft: 2,
-  },
-  input: {
-    backgroundColor: '#282828',
-    color: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 4,
-    marginBottom: 20,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  inputFocused: {
-    borderColor: '#1DB954',
-  },
-  signUpButton: {
-    backgroundColor: '#1DB954',
-    borderRadius: 24,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  signUpButtonText: {
-    color: '#000000',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-    gap: 6,
-  },
-  footerText: {
-    color: '#B3B3B3',
-    fontSize: 13,
-  },
-  link: {
-    color: '#1DB954',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-});
+const styles = authStyles;

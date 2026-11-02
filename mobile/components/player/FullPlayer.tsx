@@ -56,8 +56,8 @@ export default function FullPlayer({ visible, onClose }: { visible: boolean; onC
   const [speedOpen, setSpeedOpen] = useState(false);
 
   // Cross-fading background tinted per song.
-  const [color, setColor] = useState('#121212');
-  const [prevColor, setPrevColor] = useState('#121212');
+  const [color, setColor] = useState('#0A0A0F');
+  const [prevColor, setPrevColor] = useState('#0A0A0F');
   const fade = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!currentTrack) return;
@@ -88,10 +88,10 @@ export default function FullPlayer({ visible, onClose }: { visible: boolean; onC
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: '#121212' }}>
-        <LinearGradient colors={[prevColor, '#121212', '#121212']} style={StyleSheet.absoluteFillObject} />
+      <View style={{ flex: 1, backgroundColor: '#0A0A0F' }}>
+        <LinearGradient colors={[prevColor, '#0A0A0F', '#0A0A0F']} style={StyleSheet.absoluteFillObject} />
         <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: fade }]}>
-          <LinearGradient colors={[color, '#121212', '#121212']} style={StyleSheet.absoluteFillObject} />
+          <LinearGradient colors={[color, '#0A0A0F', '#0A0A0F']} style={StyleSheet.absoluteFillObject} />
         </Animated.View>
 
         <SafeAreaView style={{ flex: 1, justifyContent: 'space-between', paddingBottom: 24 }}>
