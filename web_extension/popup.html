@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raga Music Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header Navigation -->
+    <header class="app-header">
+      <div class="brand">
+        <img src="icons/icon-32.png" alt="Raga" class="brand-img">
+        <span class="brand-title">RAGA</span>
+        <span class="brand-dot"></span>
+      </div>
+
+      <nav class="pill-nav">
+        <button class="nav-pill active" id="tab-btn-home" data-tab="home">Home</button>
+        <button class="nav-pill" id="tab-btn-search" data-tab="search">Search</button>
+        <button class="nav-pill" id="tab-btn-queue" data-tab="queue">
+          <span>Queue</span>
+          <span class="count-pill" id="queue-badge-count">0</span>
+        </button>
+      </nav>
+
+      <button class="settings-btn" id="btn-settings-open" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </header>
+
+    <!-- Main Viewport -->
+    <main class="view-stage">
+      <!-- 1. HOME VIEW -->
+      <section class="stage-view active" id="view-home">
+        <!-- Recently Played Section (Vertical List Format!) -->
+        <div class="content-block">
+          <div class="block-header">
+            <div class="header-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <h2>Recently Played</h2>
+            </div>
+            <button class="ghost-btn" id="btn-clear-recent">Clear</button>
+          </div>
+
+          <!-- Recently Played rendered as a sleek vertical list -->
+          <div class="track-flow" id="recent-list">
+            <!-- Dynamic recently played tracks list -->
+          </div>
+
+          <div class="empty-card" id="recent-empty" style="display: none;">
+            <p>No recently played songs</p>
+            <span>Your playback history will appear here</span>
+          </div>
+        </div>
+
+        <!-- Trending Hits Section -->
+        <div class="content-block">
+          <div class="block-header">
+            <div class="header-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <h2>Trending Right Now</h2>
+            </div>
+          </div>
+          <div class="track-flow" id="home-trending-list">
+            <!-- Dynamic trending tracks -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. SEARCH VIEW -->
+      <section class="stage-view" id="view-search">
+        <div class="search-box-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search-input" placeholder="Search songs, artists, albums..." autocomplete="off" spellcheck="false">
+          <button class="clear-btn" id="btn-clear-search" title="Clear">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <!-- Quick Tags -->
+        <div class="tag-carousel" id="genre-pills">
+          <button class="pill-chip active" data-query="Trending Hits">Trending</button>
+          <button class="pill-chip" data-query="Arijit Singh">Arijit Singh</button>
+          <button class="pill-chip" data-query="Sidhu Moosewala">Sidhu Moosewala</button>
+          <button class="pill-chip" data-query="Bollywood Top 50">Bollywood</button>
+          <button class="pill-chip" data-query="Punjabi Hits 2026">Punjabi</button>
+          <button class="pill-chip" data-query="Lo-Fi Hindi">Lo-Fi</button>
+          <button class="pill-chip" data-query="Global Hits">Global</button>
+        </div>
+
+        <div class="search-meta-row">
+          <span class="meta-title" id="search-status-label">Top Results</span>
+          <span class="meta-badge" id="search-count-label"></span>
+        </div>
+
+        <div class="track-flow" id="search-results-list">
+          <!-- Injected search results -->
+        </div>
+      </section>
+
+      <!-- 3. QUEUE VIEW -->
+      <section class="stage-view" id="view-queue">
+        <div class="block-header">
+          <div class="header-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg>
+            <h2>Up Next in Queue</h2>
+          </div>
+          <button class="ghost-btn" id="btn-clear-queue">Clear Queue</button>
+        </div>
+        <div class="track-flow" id="queue-list">
+          <!-- Injected queue tracks -->
+        </div>
+      </section>
+    </main>
+
+    <!-- DOCKED BOTTOM PLAYER (Click to Expand!) -->
+    <footer class="docked-player" id="docked-mini-player">
+      <!-- Row 1: Track Details & Primary Playback Controls -->
+      <div class="player-top-row">
+        <!-- Clickable Track metadata to open Full Player Screen -->
+        <div class="meta-side clickable" id="btn-open-full-player" title="Click to open Full Player">
+          <div class="thumb-box" id="player-art-wrap">
+            <img id="player-art" src="icons/icon-48.png" alt="Cover">
+            <div class="expand-hint-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </div>
+          </div>
+          <div class="titles-box">
+            <span class="song-title" id="player-title">Welcome to Raga</span>
+            <span class="artist-subtitle" id="player-artist">Stream your favorite music</span>
+          </div>
+          <button class="heart-btn" id="btn-like" title="Save to Liked">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+        </div>
+
+        <!-- Controls: Shuffle, Prev, Big Play, Next, Repeat -->
+        <div class="controls-side">
+          <button class="mini-btn" id="btn-shuffle" title="Shuffle">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          </button>
+          <button class="mini-btn" id="btn-prev" title="Previous (Alt+Shift+B)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+          </button>
+          <button class="hero-play-btn" id="btn-play-pause" title="Play / Pause (Alt+Shift+P)">
+            <svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            <svg id="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+          <button class="mini-btn" id="btn-next" title="Next (Alt+Shift+N)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+          </button>
+          <button class="mini-btn" id="btn-repeat" title="Repeat">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 2: Full Width Interactive Progress Scrubber & Volume -->
+      <div class="player-bottom-row">
+        <span class="time-label" id="time-current">0:00</span>
+        
+        <div class="scrub-wrapper" id="progress-bar-wrap" title="Seek">
+          <div class="scrub-track">
+            <div class="scrub-fill" id="progress-fill"></div>
+          </div>
+          <div class="scrub-thumb" id="progress-thumb"></div>
+        </div>
+
+        <span class="time-label" id="time-duration">0:00</span>
+
+        <!-- Volume icon & slider -->
+        <div class="volume-module">
+          <button class="vol-btn" id="btn-mute" title="Mute/Unmute">
+            <svg id="icon-vol-high" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="icon-vol-muted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          <div class="vol-bar-track" id="vol-slider-wrap">
+            <div class="vol-bar-fill" id="vol-fill"></div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- EXPANDED FULL-SCREEN PLAYER MODAL (Opens on Clicking Now Playing!) -->
+    <div class="full-player-screen" id="full-player-modal">
+      <div class="fp-backdrop" id="fp-backdrop-glow"></div>
+      
+      <!-- Top header -->
+      <div class="fp-top-bar">
+        <button class="fp-minimize-btn" id="btn-close-full-player" title="Minimize">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <span class="fp-top-title">NOW PLAYING</span>
+        <button class="fp-lyrics-btn" id="btn-toggle-lyrics" title="Show Lyrics">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        </button>
+      </div>
+
+      <!-- Artwork Hero Stage -->
+      <div class="fp-hero-stage">
+        <div class="fp-art-wrapper" id="fp-art-container">
+          <img id="fp-artwork" src="icons/icon-128.png" alt="Album Cover">
+        </div>
+
+        <!-- Lyrics View (shown when lyrics toggled) -->
+        <div class="fp-lyrics-container" id="fp-lyrics-container" style="display: none;">
+          <div class="lyrics-scroll" id="fp-lyrics-content">
+            <div class="lyrics-loading">Loading lyrics...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Song Meta Info -->
+      <div class="fp-meta-row">
+        <div class="fp-text-col">
+          <h2 class="fp-song-title" id="fp-title">Welcome to Raga</h2>
+          <p class="fp-artist-name" id="fp-artist">Stream your favorite music</p>
+        </div>
+        <button class="fp-heart-btn" id="fp-btn-like" title="Like Song">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+      </div>
+
+      <!-- Scrubber Seek Bar -->
+      <div class="fp-seek-section">
+        <div class="fp-scrub-rail" id="fp-progress-wrap" title="Seek">
+          <div class="fp-scrub-track">
+            <div class="fp-scrub-fill" id="fp-progress-fill"></div>
+          </div>
+          <div class="fp-scrub-thumb" id="fp-progress-thumb"></div>
+        </div>
+        <div class="fp-time-labels">
+          <span id="fp-time-current">0:00</span>
+          <span id="fp-time-duration">0:00</span>
+        </div>
+      </div>
+
+      <!-- Big Controls Row -->
+      <div class="fp-controls-row">
+        <button class="fp-icon-btn" id="fp-btn-shuffle" title="Shuffle">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+        <button class="fp-icon-btn" id="fp-btn-prev" title="Previous">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line></svg>
+        </button>
+        <button class="fp-play-large-btn" id="fp-btn-play-pause" title="Play/Pause">
+          <svg id="fp-icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+          <svg id="fp-icon-pause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button class="fp-icon-btn" id="fp-btn-next" title="Next">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line></svg>
+        </button>
+        <button class="fp-icon-btn" id="fp-btn-repeat" title="Repeat">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+      </div>
+
+      <!-- Volume Bar in Full Player -->
+      <div class="fp-volume-row">
+        <button class="fp-vol-btn" id="fp-btn-mute">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <div class="fp-vol-track" id="fp-vol-wrap">
+          <div class="fp-vol-fill" id="fp-vol-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settings-modal">
+      <div class="modal-card">
+        <div class="card-header">
+          <h3>Raga Account Sync</h3>
+          <button class="card-close-btn" id="btn-modal-cancel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <p class="card-desc">Enter your Raga User ID to sync playlists, liked tracks, and history across devices.</p>
+        <div class="form-row">
+          <label for="input-user-id">Raga User ID (Optional)</label>
+          <input type="text" id="input-user-id" placeholder="e.g. user_2tX..." spellcheck="false">
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-ghost" id="btn-modal-close">Close</button>
+          <button class="btn btn-emerald" id="btn-modal-save">Save & Sync</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div class="toast-banner" id="toast-msg">Added to queue</div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

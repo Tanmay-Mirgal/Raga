@@ -1,0 +1,24 @@
+{
+  "name": "raga-browser-extension",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Raga Browser Extension - Background Music Player with Sleek UI, Search, and Recently Played Songs",
+  "main": "background.js",
+  "scripts": {
+    "build:css": "sass src/scss/popup.scss popup.css --style=compressed",
+    "watch:css": "sass --watch src/scss/popup.scss:popup.css"
+  },
+  "keywords": [
+    "music",
+    "player",
+    "browser-extension",
+    "chrome-extension",
+    "raga",
+    "background-audio"
+  ],
+  "author": "Raga Team",
+  "license": "MIT",
+  "devDependencies": {
+    "sass": "^1.94.2"
+  }
+}

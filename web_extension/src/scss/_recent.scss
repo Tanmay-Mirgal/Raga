@@ -1,0 +1,187 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.section-recent {
+  margin-bottom: 16px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 4px;
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: $text-primary;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      svg {
+        color: $brand-primary;
+      }
+    }
+
+    .clear-recent-btn {
+      font-size: 11px;
+      color: $text-muted;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: $radius-sm;
+      transition: color $transition-fast;
+
+      &:hover {
+        color: $text-secondary;
+      }
+    }
+  }
+
+  .recent-carousel {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 10px 2px;
+    scroll-snap-type: x mandatory;
+    @include custom-scrollbar;
+
+    .recent-card {
+      flex: 0 0 115px;
+      scroll-snap-align: start;
+      @include glass-card;
+      border-radius: $radius-md;
+      padding: 8px;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+
+      &.is-active {
+        border-color: $border-active;
+        background: $bg-card-active;
+        box-shadow: 0 0 14px -3px $brand-glow;
+      }
+
+      .card-cover-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; // 1:1 Aspect ratio
+        border-radius: $radius-sm;
+        overflow: hidden;
+        background: #141724;
+        margin-bottom: 8px;
+
+        img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform $transition-normal;
+        }
+
+        .play-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.45);
+          @include flex-center;
+          opacity: 0;
+          transition: opacity $transition-fast;
+
+          .play-bubble {
+            width: 32px;
+            height: 32px;
+            background: $brand-primary;
+            border-radius: 50%;
+            @include flex-center;
+            color: #000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transform: scale(0.85);
+            transition: transform $transition-fast;
+          }
+        }
+
+        .playing-indicator-badge {
+          position: absolute;
+          bottom: 6px;
+          right: 6px;
+          background: rgba(0, 0, 0, 0.75);
+          border: 1px solid $brand-primary;
+          border-radius: 12px;
+          padding: 2px 6px;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+
+          .bar {
+            width: 2px;
+            height: 8px;
+            background: $brand-primary;
+            border-radius: 1px;
+            animation: bounce-wave 0.8s ease-in-out infinite alternate;
+
+            &:nth-child(2) { animation-delay: 0.2s; height: 12px; }
+            &:nth-child(3) { animation-delay: 0.4s; height: 6px; }
+          }
+        }
+      }
+
+      &:hover {
+        .card-cover-wrap {
+          img {
+            transform: scale(1.05);
+          }
+          .play-overlay {
+            opacity: 1;
+            .play-bubble {
+              transform: scale(1);
+            }
+          }
+        }
+      }
+
+      .card-title {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: $text-primary;
+        margin-bottom: 2px;
+        @include text-truncate;
+      }
+
+      .card-artist {
+        font-size: 10px;
+        color: $text-secondary;
+        @include text-truncate;
+      }
+    }
+  }
+
+  .recent-empty {
+    @include glass-card;
+    border-radius: $radius-md;
+    padding: 16px;
+    text-align: center;
+    color: $text-secondary;
+    font-size: 12px;
+
+    p {
+      margin-bottom: 6px;
+    }
+
+    span {
+      font-size: 11px;
+      color: $text-muted;
+    }
+  }
+}
+
+@keyframes bounce-wave {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1.2); }
+}
+

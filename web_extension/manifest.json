@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Raga - Background Music Player",
+  "version": "1.0.0",
+  "description": "Stream Indian and global music in the background with sleek UI, search, queue, and recently played tracks.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Raga Music Player"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://saavn.sumit.co/*",
+    "https://saavn.dev/*",
+    "https://*.jiosaavn.com/*",
+    "https://*.saavn.com/*",
+    "https://*.saavncdn.com/*",
+    "https://raga-music-player-node.onrender.com/*",
+    "https://*/*"
+  ],
+  "commands": {
+    "play_pause": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "Play or pause current song"
+    },
+    "next_track": {
+      "suggested_key": {
+        "default": "Alt+Shift+N"
+      },
+      "description": "Skip to next song"
+    },
+    "prev_track": {
+      "suggested_key": {
+        "default": "Alt+Shift+B"
+      },
+      "description": "Skip to previous song"
+    }
+  }
+}
+
